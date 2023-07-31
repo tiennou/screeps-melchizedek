@@ -2,31 +2,31 @@ module.exports = {
   env: {
     browser: true,
     es6: true,
-    node: true
+    node: true,
   },
   extends: [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "plugin:prettier/recommended",
-    "prettier/@typescript-eslint",
+    "prettier",
     "plugin:import/errors",
     "plugin:import/warnings",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     project: "tsconfig.json",
-    sourceType: "module"
+    sourceType: "module",
   },
   plugins: ["@typescript-eslint", "import"],
   settings: {
     "import/parsers": {
-      "@typescript-eslint/parser": [".ts", ".tsx"]
+      "@typescript-eslint/parser": [".ts", ".tsx"],
     },
     "import/resolver": {
-      typescript: {}
-    }
+      typescript: {},
+    },
   },
   rules: {
     "@typescript-eslint/array-type": "error",
@@ -36,16 +36,16 @@ module.exports = {
     "@typescript-eslint/explicit-member-accessibility": [
       "error",
       {
-        accessibility: "explicit"
-      }
+        accessibility: "explicit",
+      },
     ],
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-parameter-properties": "off",
     "@typescript-eslint/no-shadow": [
       "error",
       {
-        hoist: "all"
-      }
+        hoist: "all",
+      },
     ],
     "@typescript-eslint/no-unused-expressions": "error",
     "@typescript-eslint/no-use-before-define": ["error", { functions: false }],
@@ -85,5 +85,5 @@ module.exports = {
     radix: "error",
     "sort-imports": "warn",
     "spaced-comment": "error",
-  }
+  },
 };
