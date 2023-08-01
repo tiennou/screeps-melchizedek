@@ -100,7 +100,7 @@ declare global {
   }
 }
 
-profiler.enable();
+// profiler.enable();
 
 function main() {
   console.log(`Current game tick is ${Game.time}`);
@@ -123,6 +123,4 @@ function main() {
   }
 }
 
-// When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
-// This utility uses source maps to get the line numbers and file names of the original, TS source code
-export const loop = ErrorMapper.wrapLoop(profiler.wrap(main));
+export const loop = ErrorMapper.wrapLoop(profiler.wrap(() => main));
