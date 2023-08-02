@@ -67,6 +67,8 @@ export function scheduleSpawnRoundabout(room: Room, spawn: StructureSpawn) {
 }
 
 export function scheduleBuildings(room: Room) {
+  return;
+  // @ts-expect-error WIP
   const roomConstructions = room.constructionSites;
 
   if (Game.time % 100 === 0) console.log(`Room ${room.name}: currently building ${roomConstructions.length}`);

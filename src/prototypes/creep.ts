@@ -1,5 +1,5 @@
 import { AIAction } from "ai/types";
-import { ColonyManager } from "colony/colony";
+import { Colony } from "colony/colony";
 import { logCreep } from "utils";
 
 Object.defineProperty(Creep.prototype, "manager", {
@@ -38,12 +38,12 @@ Creep.prototype.reschedule = function () {
 };
 
 Object.defineProperty(Creep.prototype, "colony", {
-  get(this: Creep): ColonyManager | undefined {
+  get(this: Creep): Colony | undefined {
     const id = this.memory.colony;
     if (!id) return undefined;
-    return [...ColonyManager.colonies()].find(c => c.id === id);
+    return [...Colony.colonies()].find(c => c.id === id);
   },
-  set(colony: ColonyManager) {
+  set(colony: Colony) {
     (this as Creep).memory.colony = colony.id;
   },
   configurable: true,

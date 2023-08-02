@@ -1,4 +1,5 @@
 import { AI } from "ai/manager";
+import { ColonyReturnCode } from "errors";
 
 export function getCreeps(room: Room, manager: AI) {
   return _.filter(
@@ -14,7 +15,7 @@ export function logCreep(creep: Creep, ...msg: any[]) {
   console.log(id, ...msg);
 }
 
-const errorMap = {
+const errorMap: Record<ColonyReturnCode, string> = {
   "0": "OK",
   "-1": "ERR_NOT_OWNER",
   "-2": "ERR_NO_PATH",
@@ -33,8 +34,9 @@ const errorMap = {
   "-12": "ERR_NO_BODYPART",
   "-14": "ERR_RCL_NOT_ENOUGH",
   "-15": "ERR_GCL_NOT_ENOUGH",
+  "-1000": "ERR_NO_AVAILABLE_SPAWNER",
 };
 
-export function errorForCode(code: ScreepsReturnCode) {
+export function errorForCode(code: ColonyReturnCode) {
   return errorMap[code] ? `${errorMap[code]} (${code})` : `unknown (${code})`;
 }

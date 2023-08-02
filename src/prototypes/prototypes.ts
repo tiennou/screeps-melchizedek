@@ -1,4 +1,3 @@
-/* eslint-disable */
 import "./creep";
 import "./room";
 import "./source";

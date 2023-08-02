@@ -1,3 +1,5 @@
+import { Colony } from "colony/colony";
+
 export enum AIManagerID {
   WORKER = "worker",
 }
@@ -14,7 +16,7 @@ export enum CreepRole {
 export interface AIManager {
   getID(): AIManagerID;
   getRoles(): CreepRole[];
-  getMemoryForRole(role: CreepRole): BaseCreepMemory;
+  getMemoryForRole(colony: Colony, role: CreepRole): BaseCreepMemory;
   schedule(creeps: Creep[]): void;
   run(creeps: Creep[]): void;
 }

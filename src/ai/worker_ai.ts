@@ -1,5 +1,6 @@
 import { AIAction, AIManager, AIManagerID, CreepRole } from "./types";
 import { errorForCode, logCreep } from "utils";
+import { Colony } from "colony/colony";
 
 const MAX_STANDBY_DURATION = 10;
 
@@ -12,8 +13,8 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
     return [CreepRole.HARVESTER, CreepRole.UPGRADER, CreepRole.BUILDER, CreepRole.RECLAIMER];
   }
 
-  public getMemoryForRole(pers: CreepRole): BaseCreepMemory {
-    return { manager: this.getID(), role: pers };
+  public getMemoryForRole(colony: Colony, pers: CreepRole): BaseCreepMemory {
+    return { manager: this.getID(), role: pers, colony: colony.id };
   }
 
   private log(creep: Creep, ...msg: any[]) {
@@ -27,6 +28,7 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
 
       if (
         (creep.role === CreepRole.HARVESTER || creep.role === CreepRole.UPGRADER || creep.role === CreepRole.BUILDER) &&
+        // || (creep.role === CreepRole.RECLAIMER && creep.action !== "reclaim")
         ((creep.action !== "harvest" && creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) ||
           (creep.action === "harvest" && !creep.target))
       ) {
@@ -43,10 +45,12 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
         creep.store.getFreeCapacity() <= 0
       ) {
         this._scheduleUpgrade(creep);
-        // } else if (persona === "builder"
-        // 	&& (creep.store.getFreeCapacity() == 0 && creep.action !== "repair" && creep.action !== "build"
-        // 		|| creep.action === "repair" && !creep.target)) {
-        // 	this._scheduleRepair(creep);
+      } else if (
+        creep.role === CreepRole.BUILDER &&
+        ((creep.store.getFreeCapacity() === 0 && creep.action !== "repair" && creep.action !== "build") ||
+          (creep.action === "repair" && !creep.target))
+      ) {
+        this._scheduleRepair(creep);
       } else if (
         creep.role === CreepRole.BUILDER &&
         ((creep.store.getFreeCapacity() === 0 && creep.action !== "repair" && creep.action !== "build") ||
@@ -112,7 +116,9 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
       creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
         filter: struct => {
           return (
-            (struct.structureType === STRUCTURE_EXTENSION || struct.structureType === STRUCTURE_SPAWN) &&
+            (struct.structureType === STRUCTURE_EXTENSION ||
+              struct.structureType === STRUCTURE_SPAWN ||
+              struct.structureType === STRUCTURE_TOWER) &&
             struct.store.getFreeCapacity(RESOURCE_ENERGY) > 0
           );
         },
@@ -165,12 +171,15 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
   }
 
   private _scheduleReclaim(creep: Creep) {
-    const candidate = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
-    if (!candidate) {
-      if (creep.store.getUsedCapacity() > 0) {
-        // No more resources, but we're carrying some
-        creep.performAction("dropoff", this._findClosestEnergyDropoffPoint(creep));
-        return;
+    let target: Resource<ResourceConstant> | Tombstone | null = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+    if (!target) {
+      target = creep.pos.findClosestByPath(FIND_TOMBSTONES);
+      if (!target) {
+        if (creep.store.getUsedCapacity() > 0) {
+          // No more resources, but we're carrying some
+          creep.performAction("dropoff", this._findClosestEnergyDropoffPoint(creep));
+          return;
+        }
       }
 
       creep.say("❓ drop");
@@ -178,10 +187,10 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
       return;
     }
 
-    this.log(creep, `found resources, going to ${String(candidate.pos)}`);
+    this.log(creep, `found resources, going to ${String(target.pos)}`);
 
     creep.say("💀 reclaim");
-    creep.performAction("reclaim", candidate);
+    creep.performAction("reclaim", target);
   }
 
   private _scheduleStandby(creep: Creep) {
@@ -243,6 +252,10 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
     } else if (result === ERR_NOT_ENOUGH_ENERGY) {
       // Clear target so we reschedule
       this.log(creep, `harvest target depleted, rescheduling`);
+      creep.reschedule();
+    } else if (result === ERR_INVALID_TARGET) {
+      // Clear target so we reschedule
+      this.log(creep, `harvest target invalid, rescheduling`);
       creep.reschedule();
     } else {
       this.log(creep, `harvest error: ${errorForCode(result)}`);
