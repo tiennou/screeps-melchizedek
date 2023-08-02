@@ -2,6 +2,7 @@ import { CreepRole } from "ai/types";
 import { Spawner } from "ai/spawner";
 import { manageCreeps } from "colony/population";
 import { scheduleBuildings } from "./building";
+import { log } from "console/log";
 
 interface ColonyData {
   id: Id<Colony>;
@@ -36,40 +37,40 @@ export class Colony {
 
   public static load(): void {
     if (!_.isObject(Memory.colonies)) {
-      console.log(`creating colony`);
+      log.debug(`creating colony`);
       this.create();
     } else {
-      console.log(`reloading colonies`);
+      log.debug(`reloading colonies`);
       for (const [colonyID, data] of Object.entries(Memory.colonies) as unknown as [Id<Colony>, ColonyData][]) {
-        console.log(`reloading colony ${colonyID}, ${JSON.stringify(data)}`);
+        log.debug(`reloading colony ${colonyID}, ${JSON.stringify(data)}`);
         if (this._colonies.get(colonyID)) {
           continue;
         }
 
         if (!_.isArray(data.controllers)) {
-          console.log(`invalid format ${String(data.controllers)}, creating colony`);
+          log.debug(`invalid format ${String(data.controllers)}, creating colony`);
           Memory.colonies = {};
           this.create();
           return;
         }
 
         const controllers: StructureController[] = [];
-        console.log("cont:", data.controllers);
         for (const controllerID of data.controllers) {
           const c = Game.getObjectById<Colony>(controllerID);
           if (!c) {
-            console.log(`cannot restore controller ${controllerID} into colony`);
+            log.warning(`cannot restore controller ${controllerID} into colony`);
             continue;
           }
           if (!(c instanceof StructureController)) {
-            console.log(`object id ${controllerID} is not a controller`);
+            log.warning(`object id ${controllerID} is not a controller`);
             continue;
           }
           controllers.push(c);
         }
 
         if (!controllers) {
-          console.log(`no controller left when reloading colony ${colonyID}`);
+          log.warning(`no controller left when reloading colony ${colonyID}`);
+          continue;
         }
 
         this._colonies.set(data.id, new this(data.id, controllers));
@@ -133,16 +134,16 @@ export class Colony {
   public schedule(): void {
     const rooms = this._controllers.map(c => c.room);
     for (const room of rooms) {
-      console.log(`planning buildings in ${String(room)}`);
+      log.debug(`planning buildings in ${String(room)}`);
       scheduleBuildings(room);
     }
 
-    console.log(`managing creeps in ${String(this)}`);
+    log.debug(`managing creeps in ${String(this)}`);
     try {
       manageCreeps(this);
     } catch (exc) {
       const e = exc as Error;
-      console.log(`Exception caught: ${e.message}: ${e.stack}`);
+      log.throw(e);
     }
   }
 

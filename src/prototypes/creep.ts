@@ -1,6 +1,6 @@
 import { AIAction } from "ai/types";
 import { Colony } from "colony/colony";
-import { logCreep } from "utils";
+import { log } from "console/log";
 
 Object.defineProperty(Creep.prototype, "manager", {
   get(this: Creep) {
@@ -56,8 +56,7 @@ Object.defineProperty(Creep.prototype, "colony", {
  */
 Creep.prototype.performAction = function (action: AIAction, target: AnyTarget) {
   if (action !== this.action || target !== this.target) {
-    // eslint-disable-next-line
-    logCreep(this, `performing action: ${action}, target: ${target}`);
+    log.debugCreep(this, `performing action: ${action}, target: ${String(target)}`);
 
     this.memory.action = action;
     this.memory.lastActionTime = Game.time;
@@ -70,8 +69,7 @@ Creep.prototype.performAction = function (action: AIAction, target: AnyTarget) {
       // } else if ("pos" in target) {
       //   this.memory.target = target.pos;
     } else {
-      // eslint-disable-next-line
-      console.log(`cannot work with ${target}`);
+      log.debugCreep(this, `cannot work with ${String(target)}`);
     }
   }
 };

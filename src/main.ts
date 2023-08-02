@@ -1,26 +1,34 @@
 import { AI } from "ai/manager";
 import { Colony } from "colony/colony";
-import { ErrorMapper } from "utils/ErrorMapper";
+import { ErrorMapper } from "utilities/ErrorMapper";
+import { log } from "console/log";
+import { USE_SCREEPS_PROFILER } from "settings";
 import profiler from "screeps-profiler";
 
 // eslint-disable-next-line sort-imports
 import "prototypes/prototypes";
 
-// profiler.enable();
+if (USE_SCREEPS_PROFILER) {
+  profiler.enable();
+}
 
 function main() {
-  console.log(`Current game tick is ${Game.time}`);
+  const cpuUsage = Game.cpu.getUsed();
+  log.debug(`main loop start`);
 
   Colony.load();
 
   global.Colony = Colony;
+  global.Log = log;
 
   for (const colony of Colony.colonies()) {
-    console.log(`processing colony ${colony.id}`);
+    log.info(`processing colony ${colony.id}`);
     colony.schedule();
   }
 
   AI.schedule();
+
+  log.debug(`main loop done: ${Game.cpu.getUsed() - cpuUsage}`);
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {

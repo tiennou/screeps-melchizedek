@@ -3,6 +3,6 @@ declare module "screeps-profiler" {
   function enable(): void;
   function output(limit: number): string[];
   function registerObject(object: any, label: string): void;
-  function registerFN(func: string, funcName: string): void;
+  function registerFN(func: CallableFunction, funcName: string): void;
   function registerClass(object: any, label: string): void;
 }

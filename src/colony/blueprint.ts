@@ -1,4 +1,5 @@
-import { errorForCode } from "utils";
+import { log } from "console/log";
+import { errorForCode } from "utilities/utils";
 
 export enum BlueprintType {
   EXTENSION = "extension",
@@ -49,7 +50,7 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
     hint = spawns[0].pos;
   }
 
-  const loc = new RoomPosition(hint.x, hint.y, room.name);
+  // const loc = new RoomPosition(hint.x, hint.y, room.name);
   const origin = new RoomPosition(hint.x - offset[0] + 1, hint.y - offset[1] + 1, room.name);
 
   // room.createFlag(loc.x, loc.y, "loc", COLOR_CYAN);
@@ -68,7 +69,7 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
 
   function checkTerrain(x: number, y: number) {
     if (terrain.get(x, y) !== 0) {
-      console.log(`terrain blocking at ${x}:${y}`);
+      log.debug(`terrain blocking at ${x}:${y}`);
       room.createFlag(x, y, "terrain", COLOR_RED);
       return false;
     }
@@ -83,13 +84,13 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
    */
   function checkStructure(x: number, y: number, allow?: StructureConstant, skipFlag: boolean = false) {
     const objs = structures[y][x];
-    console.log(
+    log.debug(
       `${x}:${y}, objs: "${String(objs)}", allow: ${allow}, types: ${String(
         objs.map(o => o.structure.structureType)
       )}, cond: ${objs && ((!allow && objs.length > 0) || !objs.every(o => o.structure.structureType === allow))}`
     );
     if (objs && ((!allow && objs.length > 0) || !objs.every(o => o.structure.structureType === allow))) {
-      console.log(`structure blocking at ${x}:${y}`);
+      log.debug(`structure blocking at ${x}:${y}`);
       if (!skipFlag) room.createFlag(x, y, "structure", COLOR_RED);
       return false;
     }
@@ -105,7 +106,7 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
   function checkConstructions(x: number, y: number, allow?: StructureConstant, skipFlag: boolean = false) {
     const objs = constructions[y][x];
     if (objs && ((!allow && objs.length > 0) || !objs.every(o => o.constructionSite.structureType === allow))) {
-      console.log(
+      log.debug(
         `construction blocking at ${x}:${y}: ${allow}, ${String(objs.map(o => o.constructionSite.structureType))}`
       );
       if (!skipFlag) room.createFlag(x, y, "construction", COLOR_RED);
@@ -129,7 +130,7 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
 
       const structType = markToStructure[mark];
       if (!structType) {
-        console.log(`unknown marker "${mark}" in blueprint`);
+        log.error(`unknown marker "${mark}" in blueprint`);
         return false;
       }
 
@@ -141,13 +142,13 @@ function hitCheckBlueprint(room: Room, blueprint: BlueprintType, build: boolean,
         // We redo the hitcheck, without the expected structure.
         // This should cause the test to fail, meaning the structure is already there.
         if (!checkStructure(pos.x, pos.y, undefined, true) || !checkConstructions(pos.x, pos.y, undefined, true)) {
-          console.log(`somthing? ${String(pos)}`);
+          log.debug(`somthing? ${String(pos)}`);
           continue;
         }
 
         const result = room.createConstructionSite(pos.x, pos.y, structType);
         if (result !== OK) {
-          console.log(`failed to build ${structType} at ${String(pos)}, ${errorForCode(result)}`);
+          log.error(`failed to build ${structType} at ${String(pos)}, ${errorForCode(result)}`);
           room.createFlag(x, y, "build", COLOR_RED);
           return false;
         }
@@ -165,7 +166,7 @@ export function makeRoad(room: Room, from: RoomPosition, to: RoomPosition) {
   for (const point of path) {
     const result = room.createConstructionSite(point.x, point.y, STRUCTURE_ROAD);
     if (result !== OK) {
-      console.log(`failed to lay road at ${point.x}:${point.y}: ${errorForCode(result)}`);
+      log.error(`failed to lay road at ${point.x}:${point.y}: ${errorForCode(result)}`);
     }
   }
   return true;

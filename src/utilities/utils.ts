@@ -1,18 +1,7 @@
-import { AI } from "ai/manager";
 import { ColonyReturnCode } from "errors";
 
-export function getCreeps(room: Room, manager: AI) {
-  return _.filter(
-    Game.creeps,
-    creep => (!manager || creep.memory.manager === manager) && creep.room.name === room.name
-  );
-}
-
-export function logCreep(creep: Creep, ...msg: any[]) {
-  // if (creep.name !== "worker7050") return;
-  const id = creep.name + (creep.memory.role ? ` (${creep.memory.role})` : "") + ":";
-  // eslint-disable-next-line
-  console.log(id, ...msg);
+export function color(str: string, colorspec: string): string {
+  return `<font color='${colorspec}'>${str}</font>`;
 }
 
 const errorMap: Record<ColonyReturnCode, string> = {

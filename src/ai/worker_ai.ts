@@ -1,6 +1,7 @@
 import { AIAction, AIManager, AIManagerID, CreepRole } from "./types";
-import { errorForCode, logCreep } from "utils";
+import { errorForCode } from "utilities/utils";
 import { Colony } from "colony/colony";
+import { log } from "console/log";
 
 const MAX_STANDBY_DURATION = 10;
 
@@ -18,8 +19,7 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
   }
 
   private log(creep: Creep, ...msg: any[]) {
-    // eslint-disable-next-line
-    logCreep(creep, ...msg);
+    log.debugCreep(creep, msg);
   }
 
   public schedule(creeps: Creep[]) {
@@ -325,7 +325,7 @@ export const WorkerAI = new (class WorkerAI implements AIManager {
     } else if (result === ERR_NOT_IN_RANGE) {
       this._doMove(creep);
     } else if (result === ERR_FULL) {
-      console.log(`${creep.name}: reclaming, but full, rescheduling`);
+      this.log(creep, `${creep.name}: reclaming, but full, rescheduling`);
       creep.reschedule();
     } else if (result === ERR_INVALID_TARGET) {
       // Clear target so we reschedule

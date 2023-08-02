@@ -2,7 +2,8 @@ import { AIManager, CreepRole } from "./types";
 import { ColonyReturnCode, ERR_NO_AVAILABLE_SPAWNER } from "errors";
 import { AI } from "./manager";
 import { Colony } from "colony/colony";
-import { errorForCode } from "utils";
+import { errorForCode } from "utilities/utils";
+import { log } from "console/log";
 
 const creepChassis: Record<string, BodyPartConstant[][]> = {
   worker: [
@@ -40,13 +41,13 @@ export class Spawner {
   }
 
   public getBestBodyForCreepRole(room: Room, manager: AIManager, role: CreepRole): BodyPartConstant[] | undefined {
-    // console.log(`finding best possible chassis for creep ${role}`);
+    // log.debug(`finding best possible chassis for creep ${role}`);
 
     const body: string = manager.getID();
 
     const availableChassis = creepChassis[body];
     if (!availableChassis) {
-      console.log(`No idea how to make a ${body}`);
+      log.warning(`No idea how to make a ${body}`);
       return undefined;
     }
     const chassisSortedByCost = availableChassis
@@ -58,15 +59,19 @@ export class Spawner {
       })
       .sort(({ cost: a_cost }, { cost: b_cost }) => b_cost - a_cost);
 
-    // for (const chassis of bodiesSortedByCost) {
-    // 	console.log(`cost: ${chassis[0]}, chassis: ${chassis[1]}`);
+    // for (const chassis of chassisSortedByCost) {
+    // 	log.debug(`cost: ${chassis[0]}, chassis: ${chassis[1]}`);
     // }
 
     const bestChassis = chassisSortedByCost.find(chassis => room.energyAvailable >= chassis.cost);
-    // console.log(`best: ${bestBody?.[1]}, cost: ${bestBody?.[0]}, energy: ${room.energyAvailable}, cap: ${room.energyCapacityAvailable}`);
+    // log.debug(
+    //   `best: ${String(bestChassis?.body)}, cost: ${bestChassis?.cost}, energy: ${room.energyAvailable}, cap: ${
+    //     room.energyCapacityAvailable
+    //   }`
+    // );
 
     if (!bestChassis) {
-      console.log(
+      log.warning(
         `not enough energy to spawn ${body} for ${role}, required: ${chassisSortedByCost
           .map(chassis => chassis.cost)
           .toString()}, energy: ${room.energyAvailable}, capacity: ${room.energyCapacityAvailable}`
@@ -78,7 +83,7 @@ export class Spawner {
 
   public tryAndSpawnCreep(role: CreepRole) {
     if (!this.colony.availableSpawns) {
-      console.log(`no available spawner in ${this._colony.toString()}`);
+      log.info(`no available spawner in ${this._colony.toString()}`);
       return ERR_NO_AVAILABLE_SPAWNER;
     }
 
@@ -94,19 +99,19 @@ export class Spawner {
       const memory = manager.getMemoryForRole(this.colony, role);
       const creepCost = this.estimateCreepBodyCost(body);
       if (spawn.room.energyAvailable < creepCost) {
-        console.log(`insufficient energy available: ${spawn.room.energyAvailable}, ${creepCost} needed`);
+        log.info(`insufficient energy available: ${spawn.room.energyAvailable}, ${creepCost} needed`);
         return;
       }
 
-      console.log(`about to spawn a ${role}, ${creepCost}, ${JSON.stringify(memory)}`);
+      log.info(`about to spawn a ${role}, ${creepCost}, ${JSON.stringify(memory)}`);
 
       result = spawn.spawnCreep(body, role + Game.time, { memory });
       if (result !== OK) {
-        console.log(`Failed to spawn ${role} in ${spawn.room.name}: ${errorForCode(result)}`);
+        log.error(`Failed to spawn ${role} in ${spawn.room.name}: ${errorForCode(result)}`);
         continue;
       }
 
-      console.log(`Spawning ${role} in ${spawn.room.name}…`);
+      log.info(`Spawning ${role} in ${spawn.room.name}…`);
       return result;
     }
 

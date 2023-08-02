@@ -1,6 +1,7 @@
 import { AI } from "ai/manager";
 import { Colony } from "./colony";
 import { CreepRole } from "ai/types";
+import { log } from "console/log";
 
 function countCreepsUsingSource(colony: Colony, exceptRole: CreepRole) {
   const rolesUsingSource = [CreepRole.HARVESTER, CreepRole.UPGRADER, CreepRole.BUILDER].filter(f => f !== exceptRole);
@@ -96,17 +97,17 @@ function getCreepPopulation(colony: Colony): PopulationStats[] {
 export function manageCreeps(colony: Colony) {
   const creepPop = getCreepPopulation(colony);
 
-  console.log(`Room "${String(colony.controllers[0].room)}" population stats:`);
+  log.info(`Room "${String(colony.controllers[0].room)}" population stats:`);
   for (const pop of creepPop) {
-    console.log(
+    log.info(
       `\t${pop.role}: ${pop.subtotal}/${pop.total}, should optimally be in [${pop.min}...${pop.max}], delta: ${pop.delta}`
     );
   }
-  console.log();
+  log.info();
 
   for (const spawn of colony.spawns) {
     if (spawn.spawning) {
-      console.log(`\t• spawning in progress, ${spawn.spawning.remainingTime} ticks left`);
+      log.info(`\t• spawning in progress, ${spawn.spawning.remainingTime} ticks left`);
     }
   }
 
@@ -120,7 +121,7 @@ export function manageCreeps(colony: Colony) {
   while ((growPop = popSortedByDelta.shift())) {
     if (growPop.delta < 0) {
       // We need that pop real bad
-      console.log(`\t• ${growPop.role} pop needs to grow`);
+      log.info(`\t• ${growPop.role} pop needs to grow`);
       shouldSpawnRole = growPop.role;
       break;
     } else if (
@@ -129,21 +130,21 @@ export function manageCreeps(colony: Colony) {
     ) {
       // We already are over the minimum cap, make sure we don't go over the max
       if (energyRatio > 0.8) {
-        console.log(`\t• ${growPop.role} pop should grow`);
+        log.info(`\t• ${growPop.role} pop should grow`);
         shouldSpawnRole = growPop.role;
         break;
       } else {
-        console.log(`\t• ${growPop.role} pop should grow, but insufficent energy`);
+        log.info(`\t• ${growPop.role} pop should grow, but insufficent energy`);
         break;
       }
     }
   }
 
   if (!growPop) {
-    console.log(`\t• Population cannot grow anymore`);
+    log.info(`\t• Population cannot grow anymore`);
     return;
   }
-  console.log();
+  log.info();
 
   if (shouldSpawnRole) {
     colony.tryAndSpawnCreep(shouldSpawnRole);

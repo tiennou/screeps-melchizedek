@@ -53,6 +53,9 @@ module.exports = {
     "@typescript-eslint/space-within-parens": ["off", "never"],
     "@typescript-eslint/unified-signatures": "error",
     "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-unused-vars": ["error", {
+      "varsIgnorePattern": "^_", "argsIgnorePattern": "^_"
+    }],
     "arrow-parens": ["off", "as-needed"],
     camelcase: "off",
     complexity: "off",

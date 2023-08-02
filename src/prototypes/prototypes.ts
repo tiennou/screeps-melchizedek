@@ -1,6 +1,7 @@
-import "./creep";
-import "./room";
-import "./source";
+import "./Creep";
+import "./Room";
+import "./RoomPosition";
+import "./Source";
 
 // type InferValue<Prop extends PropertyKey, Desc> =
 //   Desc extends { get(): any, value: any } ? never :

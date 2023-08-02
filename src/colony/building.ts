@@ -1,3 +1,4 @@
+import { log } from "console/log";
 import { BlueprintType, stampBlueprint } from "./blueprint";
 
 const MAX_PLANNED_SITES = 3;
@@ -71,7 +72,7 @@ export function scheduleBuildings(room: Room) {
   // @ts-expect-error WIP
   const roomConstructions = room.constructionSites;
 
-  if (Game.time % 100 === 0) console.log(`Room ${room.name}: currently building ${roomConstructions.length}`);
+  if (Game.time % 100 === 0) log.info(`Room ${room.name}: currently building ${roomConstructions.length}`);
 
   if (roomConstructions.length >= MAX_PLANNED_SITES) return;
 
