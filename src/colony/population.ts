@@ -1,4 +1,4 @@
-import { AI } from "ai/manager";
+import { AI } from "ai/ai";
 import { Colony } from "./colony";
 import { CreepRole } from "ai/types";
 import { log } from "console/log";

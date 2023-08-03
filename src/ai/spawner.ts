@@ -1,6 +1,6 @@
 import { AIManager, CreepRole } from "./types";
 import { ColonyReturnCode, ERR_NO_AVAILABLE_SPAWNER } from "errors";
-import { AI } from "./manager";
+import { AI } from "./ai";
 import { Colony } from "colony/colony";
 import { errorForCode } from "utilities/utils";
 import { log } from "console/log";
@@ -14,17 +14,6 @@ const creepChassis: Record<string, BodyPartConstant[][]> = {
   fighter: [],
 };
 
-const bodyPartCosts: Record<BodyPartConstant, number> = {
-  move: 50,
-  work: 100,
-  carry: 50,
-  attack: 80,
-  ranged_attack: 150,
-  tough: 10,
-  heal: 250,
-  claim: 600,
-};
-
 export class Spawner {
   private _colony: Colony;
 
@@ -36,8 +25,8 @@ export class Spawner {
     return this._colony;
   }
 
-  public estimateCreepBodyCost(bodyParts: BodyPartConstant[]) {
-    return _.sum(bodyParts.map(part => bodyPartCosts[part]));
+  public estimateCreepBodyCost(body: BodyPartConstant[]): number {
+    return body.reduce((sum, part) => sum + BODYPART_COST[part], 0);
   }
 
   public getBestBodyForCreepRole(room: Room, manager: AIManager, role: CreepRole): BodyPartConstant[] | undefined {

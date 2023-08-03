@@ -1,4 +1,4 @@
-import { AI } from "ai/manager";
+import { AI } from "ai/ai";
 import { Colony } from "colony/colony";
 import { ErrorMapper } from "utilities/ErrorMapper";
 import { log } from "console/log";
