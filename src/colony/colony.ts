@@ -4,15 +4,20 @@ import { manageCreeps } from "colony/population";
 import { scheduleBuildings } from "./building";
 import { log } from "console/log";
 import { tryCatch } from "utilities/tryCatch";
+import { Defense as Defence } from "./defence";
 
 interface ColonyData {
   id: Id<Colony>;
   controllers: Id<StructureController>[];
 }
 
+export interface ColonyMemory extends ColonyData {
+  defenceDowntime: number;
+}
+
 declare global {
   interface Memory {
-    colonies: Record<Id<Colony>, ColonyData>;
+    colonies: Record<Id<Colony>, ColonyMemory>;
   }
 }
 
@@ -82,11 +87,13 @@ export class Colony {
   public id: Id<Colony>;
   private _controllers: StructureController[];
   private _spawner: Spawner;
+  private _defenceForce: Defence;
 
   private constructor(id: Id<Colony>, controllers: StructureController[]) {
     this.id = id;
     this._controllers = controllers;
     this._spawner = new Spawner(this);
+    this._defenceForce = new Defence(this);
     this.serialize();
   }
 
@@ -97,7 +104,11 @@ export class Colony {
       controllers: this._controllers.map(c => c.id),
     };
     if (!_.isObject(Memory.colonies)) Memory.colonies = {};
-    Memory.colonies[id] = data;
+    Memory.colonies[id] = data as ColonyMemory;
+  }
+
+  public get memory(): ColonyMemory {
+    return Memory.colonies[this.id];
   }
 
   public get controllers(): StructureController[] {
