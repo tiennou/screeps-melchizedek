@@ -41,7 +41,7 @@ Object.defineProperty(Creep.prototype, "colony", {
   get(this: Creep): Colony | undefined {
     const id = this.memory.colony;
     if (!id) return undefined;
-    return [...Colony.colonies()].find(c => c.id === id);
+    return Colony.colonies().find(c => c.id === id);
   },
   set(colony: Colony) {
     (this as Creep).memory.colony = colony.id;
