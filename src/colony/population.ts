@@ -45,16 +45,11 @@ function getOptimalPopCount(colony: Colony, role: CreepRole) {
     }
 
     case CreepRole.RECLAIMER: {
-      const drops: (Resource<ResourceConstant> | Tombstone)[] = [];
-      for (const room of colony.rooms) {
-        drops.concat(room.find(FIND_DROPPED_RESOURCES));
-        const tombs = room.find(FIND_TOMBSTONES);
-        if (tombs) {
-          for (const tomb of tombs) {
-            if (tomb.store.getUsedCapacity() > 0) drops.push(tomb);
-          }
-        }
-      }
+      const drops = [
+        ...colony.room.find(FIND_DROPPED_RESOURCES),
+        ...colony.room.find(FIND_TOMBSTONES).filter(t => t.store.getUsedCapacity() > 0),
+      ];
+
       const min = drops.length > 0 ? 1 : 0;
       return [min, 1];
     }
@@ -97,7 +92,7 @@ function getCreepPopulation(colony: Colony): PopulationStats[] {
 export function manageCreeps(colony: Colony) {
   const creepPop = getCreepPopulation(colony);
 
-  log.info(`Room "${String(colony.controllers[0].room)}" population stats:`);
+  log.info(`Room "${String(colony.room)}" population stats:`);
   for (const pop of creepPop) {
     log.info(
       `\t${pop.role}: ${pop.subtotal}/${pop.total}, should optimally be in [${pop.min}...${pop.max}], delta: ${pop.delta}`

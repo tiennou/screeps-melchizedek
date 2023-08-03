@@ -9,18 +9,15 @@ const MAX_SCHEDULE_DOWNTIME = 15;
 export class Defense {
   private colony: Colony;
 
-  private towers: Record<string, StructureTower[]>;
+  private towers: StructureTower[];
 
   private downtime = 1;
 
   public constructor(colony: Colony) {
     this.colony = colony;
-    const towers: StructureTower[] = _.flatten(
-      this.colony.rooms.map(r =>
-        r.find(FIND_MY_STRUCTURES, { filter: struct => struct.structureType === STRUCTURE_TOWER })
-      )
-    );
-    this.towers = _.groupBy(towers, t => t.room.name);
+    this.towers = this.colony.room.find(FIND_MY_STRUCTURES, {
+      filter: struct => struct.structureType === STRUCTURE_TOWER,
+    });
     this.downtime = colony.memory.defenceDowntime ?? 1;
   }
 
@@ -35,25 +32,22 @@ export class Defense {
     if (Game.time % this.downtime !== 0) return;
 
     let engaging = false;
-    for (const room of this.colony.rooms) {
-      const towers = this.towers[room.name];
-      for (const tower of towers) {
-        const hostileCreeps = this.sortedHostileTargets(tower);
-        const target = hostileCreeps.shift();
-        if (!target) continue;
+    for (const tower of this.towers) {
+      const hostileCreeps = this.sortedHostileTargets(tower);
+      const target = hostileCreeps.shift();
+      if (!target) continue;
 
-        log.info(`hostiles in room ${room.name}, tower ${String(tower)} is engaging ${String(target)}`);
-        tower.attack(target);
-        engaging = true;
-      }
+      log.info(`hostiles in room ${this.colony.room.name}, tower ${String(tower)} is engaging ${String(target)}`);
+      tower.attack(target);
+      engaging = true;
+    }
 
-      if (engaging) {
-        log.debug(`hostiles, defending`);
-        this.downtime = 1;
-      } else {
-        log.debug(`no hostiles in ${room.name}`);
-        this.downtime = Math.min(this.downtime + 1, MAX_SCHEDULE_DOWNTIME);
-      }
+    if (engaging) {
+      log.debug(`hostiles, defending`);
+      this.downtime = 1;
+    } else {
+      log.debug(`no hostiles in ${this.colony.room.name}`);
+      this.downtime = Math.min(this.downtime + 1, MAX_SCHEDULE_DOWNTIME);
     }
   }
 }

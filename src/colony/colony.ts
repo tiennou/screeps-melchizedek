@@ -8,7 +8,7 @@ import { Defense as Defence } from "./defence";
 
 interface ColonyData {
   id: Id<Colony>;
-  controllers: Id<StructureController>[];
+  controller: Id<StructureController>;
 }
 
 export interface ColonyMemory extends ColonyData {
@@ -31,7 +31,7 @@ export class Colony {
       if (!controller) continue;
 
       const id = controller.id as unknown as Id<Colony>;
-      const manager = new this(id, [controller]);
+      const manager = new this(controller);
 
       this._colonies.set(id, manager);
     }
@@ -44,6 +44,7 @@ export class Colony {
   public static load(): void {
     if (!_.isObject(Memory.colonies)) {
       log.debug(`creating colony`);
+      Memory.colonies = {};
       this.create();
     } else {
       log.debug(`reloading colonies`);
@@ -53,78 +54,58 @@ export class Colony {
           continue;
         }
 
-        if (!_.isArray(data.controllers)) {
-          log.debug(`invalid format ${String(data.controllers)}, creating colony`);
-          Memory.colonies = {};
-          this.create();
-          return;
+        const controller = Game.getObjectById<StructureController>(data.controller);
+        if (!controller) {
+          log.warning(`cannot restore controller ${data.controller} into colony`);
+          continue;
         }
-
-        const controllers: StructureController[] = [];
-        for (const controllerID of data.controllers) {
-          const c = Game.getObjectById<Colony>(controllerID);
-          if (!c) {
-            log.warning(`cannot restore controller ${controllerID} into colony`);
-            continue;
-          }
-          if (!(c instanceof StructureController)) {
-            log.warning(`object id ${controllerID} is not a controller`);
-            continue;
-          }
-          controllers.push(c);
-        }
-
-        if (!controllers) {
-          log.warning(`no controller left when reloading colony ${colonyID}`);
+        if (!(controller instanceof StructureController)) {
+          log.warning(`object id ${data.controller} is not a controller`);
           continue;
         }
 
-        this._colonies.set(data.id, new this(data.id, controllers));
+        this._colonies.set(data.id, new this(controller));
       }
     }
   }
 
   public id: Id<Colony>;
-  private _controllers: StructureController[];
+  private _controller: StructureController;
+  public room: Room;
   private _spawner: Spawner;
   private _defenceForce: Defence;
 
-  private constructor(id: Id<Colony>, controllers: StructureController[]) {
-    this.id = id;
-    this._controllers = controllers;
+  private constructor(controller: StructureController) {
+    this._controller = controller;
+    this.id = controller.id as unknown as Id<Colony>;
+    this.room = controller.room;
+
+    if (!Memory.colonies[this.id]) {
+      const data: ColonyData = {
+        id: this.id,
+        controller: this._controller.id,
+      };
+      Memory.colonies[this.id] = data as ColonyMemory;
+    }
+
     this._spawner = new Spawner(this);
     this._defenceForce = new Defence(this);
-    this.serialize();
-  }
-
-  private serialize() {
-    const id = this._controllers[0].id as unknown as Id<Colony>;
-    const data: ColonyData = {
-      id,
-      controllers: this._controllers.map(c => c.id),
-    };
-    if (!_.isObject(Memory.colonies)) Memory.colonies = {};
-    Memory.colonies[id] = data as ColonyMemory;
   }
 
   public get memory(): ColonyMemory {
     return Memory.colonies[this.id];
   }
 
-  public get controllers(): StructureController[] {
-    return this._controllers;
+  public get controller(): StructureController {
+    return this._controller;
   }
 
   public get spawner(): Spawner {
     return this._spawner;
   }
 
-  public get rooms(): Room[] {
-    return this._controllers.map(c => c.room);
-  }
-
   public get spawns(): StructureSpawn[] {
-    return _.flatten(this.rooms.map(r => r.find(FIND_MY_SPAWNS)));
+    return this.room.find(FIND_MY_SPAWNS);
   }
 
   public get availableSpawns(): StructureSpawn[] {
@@ -132,11 +113,11 @@ export class Colony {
   }
 
   public get constructionSites(): ConstructionSite[] {
-    return _.flatten(this.rooms.map(r => r.constructionSites));
+    return this.room.constructionSites;
   }
 
   public get sources(): Source[] {
-    return _.flatten(this.rooms.map(r => r.sources));
+    return this.room.sources;
   }
 
   public get creeps(): Creep[] {
@@ -149,11 +130,8 @@ export class Colony {
       this._defenceForce.watch();
     });
 
-    const rooms = this._controllers.map(c => c.room);
-    for (const room of rooms) {
-      log.info(`planning buildings in ${String(room)}`);
-      scheduleBuildings(room);
-    }
+    log.info(`planning buildings in ${String(this.room)}`);
+    scheduleBuildings(this.room);
 
     log.debug(`managing creeps in ${String(this)}`);
     tryCatch(() => {
