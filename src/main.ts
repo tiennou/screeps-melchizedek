@@ -2,15 +2,26 @@ import { AI } from "ai/ai";
 import { Colony } from "colony/colony";
 import { ErrorMapper } from "utilities/ErrorMapper";
 import { log } from "console/log";
-import { USE_SCREEPS_PROFILER } from "settings";
 import profiler from "screeps-profiler";
+
+import { USE_SCREEPS_PROFILER } from "settings";
 
 // eslint-disable-next-line sort-imports
 import "prototypes/prototypes";
+import { tryCatch } from "utilities/tryCatch";
 
-if (USE_SCREEPS_PROFILER) {
-  profiler.enable();
+function onReset() {
+  log.warning("resetting…");
+  if (USE_SCREEPS_PROFILER) {
+    log.warning("🔍 Profiling enabled");
+    profiler.enable();
+  }
+
+  global.Colony = Colony;
+  global.Log = log;
 }
+
+onReset();
 
 function main() {
   const cpuUsage = Game.cpu.getUsed();
