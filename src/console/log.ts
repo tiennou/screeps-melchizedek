@@ -194,7 +194,10 @@ export class Log {
   }
 
   public throw(e: Error) {
-    console.log.apply(this, this.buildArguments(LogLevel.FATAL).concat([color(e.toString(), fatalColor)]));
+    console.log.apply(
+      this,
+      this.buildArguments(LogLevel.FATAL).concat([color(e.toString(), fatalColor), "\n", e.stack ?? ""])
+    );
   }
 
   public error(...args: any[]): undefined {

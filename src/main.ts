@@ -16,17 +16,16 @@ function main() {
   const cpuUsage = Game.cpu.getUsed();
   log.debug(`main loop start`);
 
-  Colony.load();
+  tryCatch(() => {
+    Colony.load();
 
-  global.Colony = Colony;
-  global.Log = log;
+    for (const colony of Colony.colonies()) {
+      log.info(`processing colony ${colony.id}`);
+      colony.schedule();
+    }
 
-  for (const colony of Colony.colonies()) {
-    log.info(`processing colony ${colony.id}`);
-    colony.schedule();
-  }
-
-  AI.schedule();
+    AI.schedule();
+  });
 
   log.debug(`main loop done: ${Game.cpu.getUsed() - cpuUsage}`);
 

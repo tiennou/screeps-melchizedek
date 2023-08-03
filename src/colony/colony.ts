@@ -3,6 +3,7 @@ import { Spawner } from "ai/spawner";
 import { manageCreeps } from "colony/population";
 import { scheduleBuildings } from "./building";
 import { log } from "console/log";
+import { tryCatch } from "utilities/tryCatch";
 
 interface ColonyData {
   id: Id<Colony>;
@@ -132,19 +133,23 @@ export class Colony {
   }
 
   public schedule(): void {
+    tryCatch(() => {
+      log.info(`defence force is watching`);
+      this._defenceForce.watch();
+    });
+
     const rooms = this._controllers.map(c => c.room);
     for (const room of rooms) {
-      log.debug(`planning buildings in ${String(room)}`);
+      log.info(`planning buildings in ${String(room)}`);
       scheduleBuildings(room);
     }
 
     log.debug(`managing creeps in ${String(this)}`);
-    try {
+    tryCatch(() => {
+      // WIP: safety so we reparent creeps
+      _.filter(Game.creeps, c => !c.colony).forEach(c => (c.colony = this));
       manageCreeps(this);
-    } catch (exc) {
-      const e = exc as Error;
-      log.throw(e);
-    }
+    });
   }
 
   public tryAndSpawnCreep(role: CreepRole) {
